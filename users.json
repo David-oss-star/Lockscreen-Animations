@@ -1,0 +1,14 @@
+[
+  {
+    "username": "David",
+    "password": "scrypt:32768:8:1$yx0De3bdm00lDmK5$291ccfde124e842f8f371724cb0329a7d4e09b5d7a918b692d76bb463245554f377820545541435c9edd7c0fa18370f4ff30d5fffa090a015aa3f466ac3f8995"
+  },
+  {
+    "username": "Gleekan",
+    "password": "scrypt:32768:8:1$tJMPyuQ0HIk9wgbP$37d62a661d99dc947e171641b07fbbcf68e040069f72b41928d1f5e2d708f4337c3ff72be5ea4274083ec9aded66839955149b92c15073a9e0e1b022afcac71e"
+  },
+  {
+    "username": "Gleetech",
+    "password": "scrypt:32768:8:1$mHS44y7tV4FOhagE$8c8afb35ab30e960441ef5582f3f8e7b11363c45808ee951e3865a2497f5089d083c6be1f57742b25e808ead4a2c3f3d3f1a255fe729b81dfe8f0740f859a66d"
+  }
+]

@@ -1,0 +1,62 @@
+{% extends 'base.html' %} {% block content %}
+
+<h2>{{ user }}'s Dashboard</h2>
+
+{% if animations %}
+<ul>
+  {% for anim in animations %}
+  <li>
+    <strong>ID:</strong> {{ anim.id }} <br />
+    <strong>Type:</strong> {{ anim.data.type }} <br />
+    <strong>Saved:</strong> {{ anim.data.created }} <br />
+
+    <form
+      method="POST"
+      action="{{ url_for('delete_animation') }}"
+      style="display: inline"
+    >
+      <input type="hidden" name="id" value="{{ anim.id }}" />
+      <button type="submit">Delete</button>
+    </form>
+
+    <button onclick="previewAnimation({{ anim|tojson }})">Preview</button>
+  </li>
+  <hr />
+  {% endfor %}
+</ul>
+
+<canvas
+  id="previewCanvas"
+  width="300"
+  height="500"
+  style="border: 1px solid #ccc"
+></canvas>
+
+{% else %}
+<p>No animations yet.</p>
+{% endif %}
+
+<script>
+  function previewAnimation(anim) {
+    const canvas = document.getElementById("previewCanvas");
+    const ctx = canvas.getContext("2d");
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (anim.data.type === "clock") {
+      const now = new Date();
+      ctx.fillStyle = "white";
+      ctx.font = "32px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText(
+        now.toLocaleTimeString(),
+        canvas.width / 2,
+        canvas.height / 2
+      );
+    }
+  }
+</script>
+
+{% endblock %}

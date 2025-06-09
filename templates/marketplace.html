@@ -1,0 +1,205 @@
+{% extends 'base.html' %} {% block content %}
+<h2>Animation Marketplace</h2>
+
+<input type="text" id="search" placeholder="Search animations..." />
+<select id="filterPrice">
+  <option value="all">All</option>
+  <option value="free">Free</option>
+  <option value="paid">Paid</option>
+</select>
+
+<div
+  id="animationGallery"
+  style="display: flex; flex-wrap: wrap; gap: 1rem"
+></div>
+
+<!-- Payment Gateway Callback -->
+<script>
+  function handlePaymentResult(response) {
+    console.log("Payment response:", response);
+    if (response.success) {
+      alert("Payment successful! Animation unlocked.");
+      // Optionally redirect to download or user's library
+    } else {
+      alert("Payment failed: " + (response.error || "Try again."));
+    }
+  }
+</script>
+
+<script type="module">
+  import animationRegistry from '/static/js/animationRegistry.js';
+
+  const animationsData = {{ animations|tojson }};
+  const gallery = document.getElementById('animationGallery');
+  const searchInput = document.getElementById('search');
+  const filterPrice = document.getElementById('filterPrice');
+
+  function openPreviewModal(anim) {
+    // Create modal elements
+    const modal = document.createElement('div');
+    modal.style.position = 'fixed';
+    modal.style.top = 0; modal.style.left = 0;
+    modal.style.width = '100vw'; modal.style.height = '100vh';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    modal.style.display = 'flex';
+    modal.style.justifyContent = 'center';
+    modal.style.alignItems = 'center';
+    modal.style.zIndex = 9999;
+
+    const content = document.createElement('div');
+    content.style.backgroundColor = '#fff';
+    content.style.padding = '20px';
+    content.style.borderRadius = '8px';
+    content.style.textAlign = 'center';
+
+    const title = document.createElement('h2');
+    title.textContent = anim.name;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 400;
+    canvas.height = 300;
+    content.appendChild(title);
+    content.appendChild(canvas);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.style.marginTop = '10px';
+    closeBtn.onclick = () => {
+      cancelAnimationFrame(animationId);
+      document.body.removeChild(modal);
+    };
+    content.appendChild(closeBtn);
+
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+
+    const ctx = canvas.getContext('2d');
+    const animator = animationRegistry[anim.type].factory(ctx, canvas);
+
+    let animationId;
+    function animate() {
+      animator();
+      animationId = requestAnimationFrame(animate);
+    }
+    animate();
+  }
+
+  function renderGallery(filter = 'all', search = '') {
+    gallery.innerHTML = '';
+    const filteredAnimations = Object.values(animationsData).filter(anim => {
+      const matchesSearch = anim.name.toLowerCase().includes(search.toLowerCase());
+      const matchesPrice = filter === 'all' ||
+        (filter === 'free' && anim.price === 0) ||
+        (filter === 'paid' && anim.price > 0);
+      return matchesSearch && matchesPrice;
+    });
+
+    filteredAnimations.forEach(anim => {
+      const card = document.createElement('div');
+      card.style.border = '1px solid #ccc';
+      card.style.borderRadius = '8px';
+      card.style.padding = '10px';
+      card.style.width = '220px';
+
+      const title = document.createElement('h3');
+      title.textContent = anim.name;
+      card.appendChild(title);
+
+      const description = document.createElement('p');
+      description.textContent = anim.description;
+      card.appendChild(description);
+
+      const price = document.createElement('p');
+      price.textContent = anim.price === 0 ? 'Free' : `Le ${anim.price}`;
+      card.appendChild(price);
+
+      const preview = createCanvas(anim.type);
+      card.appendChild(preview);
+
+      const buttonContainer = document.createElement('div');
+      buttonContainer.style.display = 'flex';
+      buttonContainer.style.gap = '8px';
+      buttonContainer.style.marginTop = '10px';
+
+      const previewBtn = document.createElement('button');
+      previewBtn.textContent = 'Preview';
+      previewBtn.onclick = () => openPreviewModal(anim);
+      buttonContainer.appendChild(previewBtn);
+
+      if (anim.price > 0) {
+        const buyBtn = document.createElement('button');
+        buyBtn.textContent = 'Buy';
+        buyBtn.onclick = () => {
+          if (!anim.id || !anim.price) {
+            alert("Invalid animation or price.");
+            return;
+          }
+
+          const baseUrl = 'http://127.0.0.1:5000/payment';
+          const params = new URLSearchParams({
+            animationId: anim.id,
+            price: anim.price.toString(),
+          });
+
+          // Open payment gateway in a popup window
+          const popup = window.open(`${baseUrl}?${params.toString()}`, '_blank', 'width=500,height=600');
+
+          if (!popup) {
+            alert("Popup blocked. Please allow popups for this site.");
+          }
+        };
+
+        buttonContainer.appendChild(buyBtn);
+      } else {
+        const freeBtn = document.createElement('button');
+        freeBtn.textContent = 'Get for Free';
+        freeBtn.onclick = () => {
+          alert(`"${anim.name}" added to your library!`);
+        };
+        buttonContainer.appendChild(freeBtn);
+      }
+
+      card.appendChild(buttonContainer);
+      gallery.appendChild(card);
+    });
+  }
+
+  function createCanvas(animationType) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 150;
+    const ctx = canvas.getContext('2d');
+
+    if (animationRegistry[animationType]) {
+      const animator = animationRegistry[animationType].factory(ctx, canvas);
+      function animate() {
+        animator();
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+    return canvas;
+  }
+
+  searchInput.addEventListener('input', () => {
+    renderGallery(filterPrice.value, searchInput.value);
+  });
+
+  filterPrice.addEventListener('change', () => {
+    renderGallery(filterPrice.value, searchInput.value);
+  });
+  window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'payment_result') {
+      const { success, animationId, error } = event.data;
+      if (success) {
+        alert(`Payment successful for animation ${animationId}`);
+        // Unlock or add to user’s library here
+      } else {
+        alert(`Payment failed for ${animationId}: ${error}`);
+      }
+    }
+  });
+
+  renderGallery();
+</script>
+{% endblock %}

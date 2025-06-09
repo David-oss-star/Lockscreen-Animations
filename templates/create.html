@@ -1,0 +1,76 @@
+{% extends 'base.html' %} {% block content %}
+<h2>Create Your Lock Screen Animation</h2>
+<label for="animationType">Choose Animation Type:</label>
+<select id="animationType">
+  <option value="clock">Clock</option>
+  <option value="bouncingText">Bouncing Text</option>
+  <option value="waveText">Wave Text</option>
+  <option value="colorPulse">Color Pulse</option>
+  <!-- ✅ -->
+</select>
+
+<canvas id="animCanvas" width="300" height="500"></canvas>
+<button id="saveButton">Save Animation</button>
+
+<script type="module">
+  import animationRegistry from "/static/js/animationRegistry.js";
+
+  const canvas = document.getElementById("animCanvas");
+  const ctx = canvas.getContext("2d");
+
+  const select = document.getElementById("animationType");
+
+  let animator = () => {};
+  function animateLoop() {
+    animator();
+    requestAnimationFrame(animateLoop);
+  }
+
+  function loadAnimator() {
+    const animationType = select.value;
+    if (animationRegistry[animationType]) {
+      animator = animationRegistry[animationType].factory(ctx, canvas);
+    } else {
+      animator = () => {};
+    }
+  }
+
+  select.addEventListener("change", loadAnimator);
+
+  function saveDesign() {
+    const type = document.getElementById("animationType").value;
+
+    const design = {
+      type,
+      created: new Date().toISOString(),
+      settings: {
+        color: "#ff0000",
+        text: "Hello!",
+        speed: 2,
+      },
+    };
+
+    fetch("/save_animation", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(design),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        alert("Animation saved!");
+        location.href = "/my_animations";
+      })
+      .catch((err) => alert("Error saving animation: " + err.message));
+  }
+
+  // Attach save button event listener here (instead of inline onclick)
+  document.getElementById("saveButton").addEventListener("click", saveDesign);
+
+  // Initialize once on page load
+  loadAnimator();
+  animateLoop();
+</script>
+
+{% endblock %}

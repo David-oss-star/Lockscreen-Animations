@@ -1,0 +1,30 @@
+[
+    {
+      "id": 1,
+      "title": "Elegant Clock",
+      "description": "A stylish clock animation with smooth ticking.",
+      "type": "clock",
+      "price": 5.99,
+      "previewImage": "/static/previews/clock1.png",
+      "animationData": {
+        "settings": {
+          "color": "blue",
+          "size": 300
+        }
+      },
+      "seller": "Official",
+      "created": "2025-06-01T20:00:00Z"
+    },
+    {
+      "id": 2,
+      "title": "Color Pulse Pro",
+      "description": "A premium color pulsing effect with advanced customization.",
+      "type": "colorPulse",
+      "price": 7.99,
+      "previewImage": "/static/previews/colorPulse1.png",
+      "animationData": { },
+      "seller": "Gleekan",
+      "created": "2025-06-01T21:00:00Z"
+    }
+  ]
+  

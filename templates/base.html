@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Lock Screen Animator</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
+  <body>
+    <header>
+      <h1><a href="/">LockScreen Animations</a></h1>
+      {% if session.get('user') %}
+      <div>
+        <a href="/create">Create</a>
+        <a href="/marketplace">Marketplace</a>
+        <a href="{{ url_for('my_animations') }}">My Animations</a>
+        <a href="/logout">Logout</a>
+      </div>
+      {% else %}
+      <div>
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+      </div>
+      {% endif %}
+    </header>
+    <main>
+      {% with messages = get_flashed_messages() %} {% if messages %}
+      <ul>
+        {% for msg in messages %}
+        <li>{{ msg }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %} {% endwith %} {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>

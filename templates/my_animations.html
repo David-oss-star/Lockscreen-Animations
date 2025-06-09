@@ -1,0 +1,125 @@
+{% extends 'base.html' %} {% block content %}
+<h2>My Saved Animations</h2>
+
+{% if animations %}
+<ul>
+  {% for anim in animations %}
+  <li>
+    <strong>ID:</strong> {{ anim.id }} <br />
+    <strong>Type:</strong> {{ anim.data.type }} <br />
+    <strong>Saved:</strong> {{ anim.data.created }} <br />
+
+    <button
+      class="apply-btn"
+      data-id="{{ anim.id }}"
+      data-name="{{ anim.data.type }}"
+    >
+      Apply
+    </button>
+    <form method="POST" action="{{ url_for('delete_animation') }}">
+      <input type="hidden" name="id" value="{{ anim.id }}" />
+      <button type="submit">Delete</button>
+    </form>
+    <canvas
+      class="previewCanvas"
+      id="preview{{ anim.id }}"
+      width="300"
+      height="100"
+    ></canvas>
+  </li>
+
+  <hr />
+  {% endfor %}
+</ul>
+{% else %}
+<p>You have no saved animations yet.</p>
+{% endif %}
+
+<script type="module">
+    import animationRegistry from "/static/js/animationRegistry.js";
+
+    const animations = {{ animations|tojson }};
+
+    const observers = [];
+
+  animations.forEach(anim => {
+    const canvas = document.getElementById("preview" + anim.id);
+    const ctx = canvas.getContext("2d");
+    const type = anim.data.type;
+    let animator = () => {};
+  if (animationRegistry[type] && typeof animationRegistry[type].factory === 'function') {
+      animator = animationRegistry[type].factory(ctx, canvas);
+  }
+
+    let animationFrameId = null;
+
+    function animate() {
+      animator();
+      animationFrameId = requestAnimationFrame(animate);
+    }
+
+    function stopAnimation() {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            animate(); // start animating
+          } else {
+            stopAnimation(); // pause when out of view
+          }
+        });
+      },
+      { threshold: 0.1 } // Trigger when at least 10% of canvas is visible
+    );
+
+    observer.observe(canvas);
+    observers.push(observer); // optional: for cleanup later
+  });
+
+  document.querySelectorAll('.apply-btn').forEach(button => {
+    button.addEventListener('click', () => {
+      const animName = button.getAttribute('data-name') || 'Animation';
+      alert(`Animation "${animName}" has been successfully applied!`);
+      // TODO: Add real apply logic here later
+    });
+  });
+</script>
+<style>
+  li {
+    margin-bottom: 2rem;
+  }
+  form,
+  .apply-btn {
+    display: inline-block;
+    margin-right: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  button {
+    background-color: #007bff;
+    border: none;
+    color: white;
+    padding: 0.4rem 0.9rem;
+    font-size: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+  }
+
+  button:hover {
+    background-color: #0056b3;
+  }
+
+  button:disabled {
+    background-color: #999;
+    cursor: not-allowed;
+  }
+</style>
+
+{% endblock %}

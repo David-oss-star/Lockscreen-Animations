@@ -1,0 +1,51 @@
+{% extends 'base.html' %} {% block content %}
+<h2>
+  Fake Payment for "{{ animation.title }}"
+  <button
+    id="closeBtn"
+    style="
+      float: right;
+      font-size: 1.2em;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: grey;
+    "
+  >
+    ✖
+  </button>
+</h2>
+
+{% if error %}
+<p style="color: red">{{ error }}</p>
+{% endif %}
+<form method="POST">
+  <p>Price: ${{ animation.price }}</p>
+  <label>
+    Card Number:
+    <input
+      type="text"
+      name="card_number"
+      required
+      pattern="\d{16}"
+      placeholder="1234 5678 9012 3456"
+    /> </label
+  ><br /><br />
+  <label>
+    Expiry Date:
+    <input type="text" name="expiry" required placeholder="MM/YY" /> </label
+  ><br /><br />
+  <label>
+    CVV:
+    <input type="text" name="cvv" required pattern="\d{3}" /> </label
+  ><br /><br />
+  <button type="submit">Pay Now</button>
+</form>
+
+<script>
+  document.getElementById("closeBtn").addEventListener("click", () => {
+    // Redirect to marketplace or previous page
+    window.location.href = "{{ url_for('marketplace') }}"; // Adjust route as needed
+  });
+</script>
+{% endblock %} Card Number: 1234567812345678 Expiry: 12/25 CVV: 123
